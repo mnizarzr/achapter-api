@@ -8,10 +8,14 @@ class Author extends Model {
 
     protected $table = 'tbl_author';
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'biography'];
 
-    
-
+    /**
+     * 
+     *  Note: to search books
+     *  use manual query
+     * 
+     * */    
 
 }
 

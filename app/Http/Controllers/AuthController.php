@@ -9,14 +9,22 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 
 class AuthController extends Controller
 {
 
-    public function register(Request $request)
+    private $request;
+
+    function __construct(Request $request)
+    {
+        $this->request = $request;
+    }
+
+    public function register()
     {
         $emailValidator = Validator::make(
-            ['email' => $request->email],
+            ['email' => $this->request->email],
             ['email' => 'required|email|unique:tbl_user']
         );
 
@@ -32,9 +40,9 @@ class AuthController extends Controller
 
         try {
             $user = new User();
-            $user->name = $request->name;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
+            $user->name = $this->request->name;
+            $user->email = $this->request->email;
+            $user->password = Hash::make($this->request->password);
             $user->role = 'user';
 
             $user->save();
@@ -49,16 +57,19 @@ class AuthController extends Controller
         }
     }
 
-    public function login(Request $request)
+    public function login()
     {
-        $this->validate($request, [
+        $this->validate($this->request, [
             'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $credentials = $request->only(['email', 'password']);
+        $credentials = $this->request->only(['email', 'password']);
 
-        if (!$token = Auth::attempt($credentials)) {
+        Auth::factory()->setTTL(60*24*7); // JWT expires in 7 days;
+        $token = Auth::attempt($credentials);
+
+        if (!$token) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -66,10 +77,9 @@ class AuthController extends Controller
             'status' => 200,
             'error' => null,
             'message' => "Login success",
-            'token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => Auth::factory()->getTTL() * 60
+            'token' => $token
         ], 200);
     }
+
 
 }
