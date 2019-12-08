@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -23,21 +24,6 @@ class AuthController extends Controller
 
     public function register()
     {
-        $emailValidator = Validator::make(
-            ['email' => $this->request->email],
-            ['email' => 'required|email|unique:tbl_user']
-        );
-
-        if ($emailValidator->fails()) {
-            return response()->json([
-                'status' => 409,
-                'error' => [
-                    'code' => 'ERR_EMAIL_NOT_AVAILABLE',
-                    'message' => 'The email has already been taken.'
-                ]
-            ], 409);
-        }
-
         try {
             $user = new User();
             $user->name = $this->request->name;
@@ -53,7 +39,14 @@ class AuthController extends Controller
                 'data' => $user
             ], 201);
         } catch (Exception $e) {
-            return response()->json(['error' => $e, 'message' => 'User Registration Failed!'], 409);
+            if ($e->errorInfo[1] == 1062) return response()->json([
+                "status" => 409,
+                "error" => "ERR_EMAIL_NOT_AVAILABLE",
+                "message" => "Email has been registered"
+            ], 409);
+            return response()->json([
+                'error' => $e, 'message' => 'User Registration Failed!'
+            ], 409);
         }
     }
 
@@ -66,7 +59,7 @@ class AuthController extends Controller
 
         $credentials = $this->request->only(['email', 'password']);
 
-        Auth::factory()->setTTL(60*24*7); // JWT expires in 7 days;
+        Auth::factory()->setTTL(60 * 24 * 7); // JWT expires in 7 days;
         $token = Auth::attempt($credentials);
 
         if (!$token) {
@@ -80,6 +73,4 @@ class AuthController extends Controller
             'token' => $token
         ], 200);
     }
-
-
 }

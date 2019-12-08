@@ -10,12 +10,10 @@ class Author extends Model {
 
     protected $fillable = ['name', 'biography'];
 
-    /**
-     * 
-     *  Note: to search books
-     *  use manual query
-     * 
-     * */    
+    public function books()
+    {
+        return $this->belongsToMany("App\Models\Book", "tbl_book_author", "author_id", "book_id");
+    }
 
 }
 
