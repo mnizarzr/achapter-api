@@ -11,7 +11,7 @@ class Book extends Model
 
     protected $table = "tbl_book";
 
-    protected $fillable = ["ISBN", "title", "publishing_date"];
+    protected $fillable = ["*"];
 
     protected $hidden = ['author_id', 'publisher_id'];
 

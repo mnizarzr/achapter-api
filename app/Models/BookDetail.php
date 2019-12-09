@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class BookDetail extends Model{
 
+    protected $primaryKey = "book_id";
+
     protected $table = "tbl_book_detail";
 
     protected $fillable = ["*"];

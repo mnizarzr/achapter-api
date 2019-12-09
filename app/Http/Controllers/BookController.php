@@ -3,76 +3,86 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Author;
 use App\Models\Book;
 use App\Models\BookDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
-use Symfony\Component\Console\Helper\Helper;
 
 class BookController extends Controller
 {
 
-    private $request;
-
-    public function __construct(Request $request)
+    public function __construct()
     {
-        $this->request = $request;
         $this->middleware('isAdmin', ["only" => ["create", "edit"]]);
     }
 
     public function index()
     {
-        $book = Book::with(['authors:author_id,name', 'publisher:id,name'])->get();
-        return response()->json([
-            "status" => 200,
-            "error" => null,
-            "message" => "Fetched all successfully",
-            "data" => $book
-        ]);
+        $book = Book::with(['authors:author_id,name', 'publisher:id,name'])->paginate(10);
+        return $this->responseSuccess(200, "Fetched all successfully", $book);
     }
 
-    public function create()
+    public function create(Request $request)
     {
 
         $book = new Book();
         $bookDetail = new BookDetail();
 
-        $book->ISBN = $this->request->isbn;
-        $book->title = $this->request->title;
+        // Book model fields
+
+        $book->ISBN = $request->isbn;
+        $book->title = $request->title;
+        $book->publishing_date = $request->publishing_date;
+        $book->publisher_id = $request->publisher_id;
         $book->created_by = Auth::user()["id"];
         $book->updated_by = Auth::user()["id"];
 
-        $bookDetail->price = $this->request->price;
-        $bookDetail->stock = $this->request->stock;
+        // Book detail fields
 
-        $pictureName = null;
+        $pictureName = "default.png";
 
-        if ($this->request->hasFile('picture') && $this->request->file('picture')->isValid()) {
-            $pictureName = str_replace(" ", "", $this->request->title) . "_" . Date::now()->toDateString() . "." . $this->request->file('picture')->getClientOriginalExtension();
-            $this->request->file('picture')->move(base_path('public' . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'books'), $pictureName);
+        if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
+            $pictureName = $this->uploadPicture($request, 'books');
         }
 
+        $bookDetail->price = $request->price;
+        $bookDetail->description = $request->description;
+        $bookDetail->width = $request->width;
+        $bookDetail->height = $request->height;
+        $bookDetail->weight = $request->weigth;
+        $bookDetail->pages = $request->pages;
+        $bookDetail->language = $request->language;
+        $bookDetail->discount = $request->discount;
+        $bookDetail->stock = $request->stock;
         $bookDetail->pictures = $pictureName;
 
         $book->save();
         $book->bookDetail()->save($bookDetail);
 
-        if (is_array($this->request->author_id)) {
-            foreach ($this->request->author_id as $id) {
-                $book->authors()->attach($id);
+        if (is_array($request->author_id)) {
+            foreach ($request->author_id as $id) {
+                $book->authors()->sync($id);
             }
         } else {
-            $book->authors()->attach($this->request->author_id);
+            $book->authors()->sync($request->author_id);
+        }
+
+        if (is_array($request->genre_id)) {
+            foreach ($request->genre_id as $id) {
+                $book->genres()->sync($id);
+            }
+        } else {
+            $book->genres()->sync($request->genre_id);
         }
 
         $book["authors"] = $book->authors()->get();
+        $book["genres"] = $book->genres()->get();
 
         return $this->responseSuccess(200, "Book added", array_merge($book->toArray(), $bookDetail->toArray()));
     }
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
 
         $book = Book::find($id);
@@ -83,21 +93,61 @@ class BookController extends Controller
             "message" => "Not found"
         ], 404);
 
-        if (is_array($this->request->genre_id)) {
-            foreach ($this->request->genre_id as $id) {
-                $book->genres()->attach($id);
-            }
-        } else {
-            $book->genres()->sync($this->request->genre_id);
-        }
-        // $book->publishing_date = $this->request->publishing_date;
-        // $book->publisher_id = $this->request->publisher_id;
+        $bookDetail = BookDetail::find($id);
+
+        // Book model fields
+
+        $book->ISBN = $request->isbn;
+        $book->title = $request->title;
+        $book->publishing_date = $request->publishing_date;
+        $book->publisher_id = $request->publisher_id;
         $book->updated_by = Auth::user()["id"];
 
+        // Book detail fields
+
+        $pictureName = "default.png";
+
+        if ($bookDetail->pictures != "default.png" && !$request->hasFile('picture')) {
+            $pictureName = $bookDetail->pictures;
+        } else if ($request->hasFile('picture') && $request->file('picture')->isValid()) {
+            $pictureName = $this->uploadPicture($request, 'books');
+        }
+
+        $bookDetail->price = $request->price;
+        $bookDetail->description = $request->description;
+        $bookDetail->width = $request->width;
+        $bookDetail->height = $request->height;
+        $bookDetail->weight = $request->weight;
+        $bookDetail->pages = $request->pages;
+        $bookDetail->language = $request->language;
+        $bookDetail->discount = $request->discount;
+        $bookDetail->stock = $request->stock;
+        $bookDetail->pictures = $pictureName;
+
         $book->save();
+        $book->bookDetail()->save($bookDetail);
+
+        if (is_array($request->author_id)) {
+            foreach ($request->author_id as $id) {
+                $book->authors()->sync($id);
+            }
+        } else {
+            $book->authors()->sync($request->author_id);
+        }
+
+        if (is_array($request->genre_id)) {
+            foreach ($request->genre_id as $id) {
+                $book->genres()->sync($id);
+            }
+        } else {
+            $book->genres()->sync($request->genre_id);
+        }
+
+        $book["authors"] = $book->authors()->get();
+        $book["genres"] = $book->genres()->get();
 
         $book = Book::select('*')->where(["id" => $id])
-            ->with(['authors:author_id,name', 'publisher:id,name', 'genres:name'])->get();
+            ->with(['authors:author_id,name', 'publisher:id,name', 'genres:name', 'bookDetail'])->get();
 
         return $this->responseSuccess(200, "Book updated", $book[0]);
     }
@@ -117,6 +167,14 @@ class BookController extends Controller
             ->with(['authors:author_id,name', 'publisher:id,name', 'genres:name'])->get();
 
         return $this->responseSuccess(200, "Book found", $book[0]);
+    }
+
+    public function findByName($name)
+    {
+        $queryName = str_replace('_', " ", $name);
+        $book = Book::where('title', $queryName)->firstOrFail();
+
+        return response($book);
     }
 
     public function delete($id)

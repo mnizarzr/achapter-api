@@ -45,6 +45,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->get('/book', 'BookController@index');
     $router->post('/book', 'BookController@create');
     $router->get('/book/{id}', 'BookController@find');
+    $router->get('/book/{name:[a-zA-Z0-9_]+}', 'BookController@findByName');
     $router->put('/book/{id}', 'BookController@edit');
     $router->delete('/book/{id}', 'BookController@delete');
 
