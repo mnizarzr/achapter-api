@@ -64,15 +64,23 @@ class AuthController extends Controller
         }
 
         $user = User::whereEmail($this->request->email)->first();
+        $user->makeHidden(['role', 'created_at', 'updated_at'])->toArray();
 
         $tokenData = ["token" => $token, "exp_at" => 60 * 24 * 7];
 
         return response()->json([
             'status' => 200,
-            'error' => null,
+            'error' => "",
             'message' => "Login success",
             'token' => $tokenData,
             'data' => $user
         ], 200);
     }
+
+    public function logout()
+    {
+        Auth::invalidate($this->request->bearerToken());
+        return response()->json("Logout success");
+    }
+
 }
