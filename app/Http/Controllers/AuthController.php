@@ -7,10 +7,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -66,11 +63,16 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        $user = User::whereEmail($this->request->email)->first();
+
+        $tokenData = ["token" => $token, "exp_at" => 60 * 24 * 7];
+
         return response()->json([
             'status' => 200,
             'error' => null,
             'message' => "Login success",
-            'token' => $token
+            'token' => $tokenData,
+            'data' => $user
         ], 200);
     }
 }

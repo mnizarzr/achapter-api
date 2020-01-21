@@ -24,13 +24,9 @@ class Controller extends BaseController
         return response()->json([
             "status" => $status,
             "error" => $error,
-            "message" => $message
+            "message" => $message,
+            "data" => null
         ], $status);
-    }
-
-    protected function generatePictureName($name, $ext)
-    {      
-        return str_replace(" ", "", $name) . "_" . Date::now()->toDateString() . "." . $ext;
     }
 
     protected function uploadPicture(Request $request, $path)

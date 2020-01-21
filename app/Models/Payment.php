@@ -4,12 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class OrderDetail extends Model
+class Payment extends Model
 {
 
-    protected $table = "tbl_order_detail";
-
-    protected $guarded = ['id', 'order_id'];
+    protected $table = "tbl_payment";
 
     public $timestamps = false;
 
@@ -18,4 +16,7 @@ class OrderDetail extends Model
         return $this->belongsTo("App\Models\Order");
     }
 
+
 }
+
+?>

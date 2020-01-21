@@ -49,6 +49,14 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->put('/book/{id}', 'BookController@edit');
     $router->delete('/book/{id}', 'BookController@delete');
 
+    $router->get('/search/{keyword}', 'SearchController@index');
+
     $router->post('/order/{id}', "OrderController@create");
+    $router->post('/confirm_order/{order_id}', 'OrderController@confirmOrder');
+    $router->post("/pay", "PaymentController@index");
+
+    $router->get('/feed', "FeedController@index");
+    $router->get('/feed/{feedName}', "FeedController@getFeed");
+    
 
 });

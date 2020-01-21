@@ -7,7 +7,6 @@ use App\Models\Book;
 use App\Models\BookDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 
 class BookController extends Controller
 {

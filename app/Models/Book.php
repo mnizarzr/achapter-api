@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Book extends Model
 {
@@ -14,6 +15,14 @@ class Book extends Model
     protected $fillable = ["*"];
 
     protected $hidden = ['author_id', 'publisher_id'];
+
+    public function setCreatedByAttribute() {
+        $this->attributes['created_by'] = Auth::user()["id"];
+    }
+
+    public function setUpdatedByAttribute() {
+        $this->attributes['updated_by'] = Auth::user()["id"];
+    }
 
     public function bookDetail()
     {
