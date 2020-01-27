@@ -36,7 +36,7 @@ class FeedController extends Controller
     public function index()
     {
 
-        $newRelease = Book::whereMonth('publishing_date', Date::now()->month)->get();
+        $newRelease = Book::with('bookDetail')->whereMonth('publishing_date', Date::now()->month)->get();
         $promo = Book::with('bookDetail')->whereHas('bookDetail', function (Builder $query) {
             $query->where('discount', '>', 0);
         })->get();
@@ -54,9 +54,7 @@ class FeedController extends Controller
                 $response = Book::whereMonth('publishing_date', Date::now()->month)->get();
                 break;
             case "best_seller":
-                $response = Book::with('bookDetail')->whereHas('bookDetail', function (Builder $query) {
-                    $query->where('discount', '>', 0);
-                })->get();
+                $response = Book::with('bookDetail')->orderBy('bought_count', 'desc')->get();
                 break;
         }
 
