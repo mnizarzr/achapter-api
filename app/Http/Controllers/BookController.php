@@ -7,7 +7,7 @@ use App\Models\Book;
 use App\Models\BookDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use App\Resources\BookDetailResource;
 class BookController extends Controller
 {
 
@@ -162,10 +162,10 @@ class BookController extends Controller
             "message" => "Not found"
         ], 404);
 
-        $book = Book::select('*')->where(["id" => $id])
-            ->with(['authors:author_id,name', 'publisher:id,name', 'genres:name'])->get();
+        $book = Book::where(["id" => $id])
+            ->with(["authors", "publisher", "genres", "bookDetail"])->get();
 
-        return $this->responseSuccess(200, "Book found", $book[0]);
+        return $this->responseSuccess(200, "Book found", BookDetailResource::collection($book));
     }
 
     public function findByName($name)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Author;
 use App\Models\Book;
 use App\Models\Publisher;
+use App\Resources\BookResource;
 
 class SearchController extends Controller
 {
@@ -21,9 +22,9 @@ class SearchController extends Controller
             "error" => null,
             "message" => "Search complete",
             "data" => [
-                "book" => $data[0],
-                "author" => $data[1],
-                "publisher" => $data[2]
+                "books" => $data[0],
+                "authors" => $data[1],
+                "publishers" => $data[2]
             ]
         ], 200);
     }
@@ -34,15 +35,15 @@ class SearchController extends Controller
         $numberOnly = preg_match('/^(\(?\+?[0-9]*\)?)?[0-9_\- \(\)]*$/', $keyword);
 
         if ($numberOnly) {
-            $book = Book::where('isbn', 'like', '%' . $keyword . '%')->get();
-            return $this->searchResponse([$book]);
+            $book = Book::where('ISBN', 'like', '%' . $keyword . '%')->get();
+            return $this->searchResponse([BookResource::collection($book), [], []]);
         }
         
         $book = Book::where('title', 'like', '%'.$keyword.'%')->get();
-        $author = Author::where('name', 'like', '%'.$keyword.'%')->get();
+        $author = Author::where('name', 'like', '%'.$keyword.'%')->withCount('books')->get();
         $publisher = Publisher::where('name', 'like', '%'.$keyword.'%')->get();
 
-        return $this->searchResponse([$book, $author, $publisher]);
+        return $this->searchResponse([BookResource::collection($book), $author, $publisher]);
         
     }
 }

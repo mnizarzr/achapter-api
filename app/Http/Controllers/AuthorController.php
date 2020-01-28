@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Author;
 use App\Models\Book;
+use App\Resources\BookResource;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -93,7 +94,7 @@ class AuthorController extends Controller
 
     public function getAllBooks($id)
     {
-        $author = Author::where(["id" => $id])->get();
+        $author = Author::where(["id" => $id])->withCount('books')->get();
         $books = Book::with('bookDetail')->whereHas('authors', function ($query) use ($id) {
             $query->where('author_id', $id);
         })->get();
@@ -101,7 +102,7 @@ class AuthorController extends Controller
         $author->makeHidden(['created_at', 'updated_at']);
         $books->makeHidden(['created_at', 'updated_at', 'created_by', 'updated_by']);
 
-        $author[0]['books'] = $books;
+        $author[0]['books'] = BookResource::collection($books);
 
         return $this->responseSuccess(200, "Fetched all successfully", $author[0]);
     }

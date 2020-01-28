@@ -39,6 +39,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->delete('/shipper/{id}', 'ShipperController@delete');
 
     $router->get('/genre', 'GenreController@index');
+    $router->get('/genre/{id}', 'GenreController@getAllBooks');
     $router->post('/genre', 'GenreController@create');
     $router->put('/genre/{id}', 'GenreController@edit');
     $router->delete('/genre/{id}', 'GenreController@delete');

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Book;
 use App\Models\Genre;
 use Illuminate\Http\Request;
+use App\Resources\BookResource;
 
 class GenreController extends Controller
 {
@@ -20,6 +22,7 @@ class GenreController extends Controller
     public function index()
     {
         $genres = Genre::all();
+        $genres->makeHidden(['created_at', 'updated_at'])->toBase();
         return $this->responseSuccess(200, "Fetched all successfully", $genres);
     }
 
@@ -44,8 +47,15 @@ class GenreController extends Controller
 
     public function getAllBooks($id)
     {
-        $books = Genre::select('*')->where(["id" => $id])->with('books')->get();
-        return $this->responseSuccess(200, "Fetched all successfully", $books[0]);
+        $genre = Genre::where(["id" => $id])->get();
+        $books = Book::with(['bookDetail', 'authors'])->whereHas('genres', function ($query) use ($id) {
+            $query->whereGenreId($id);
+        })->get();
+
+        $genre->makeHidden(['created_at', 'updated_at'])->toBase();
+        
+        $genre[0]['books'] = BookResource::collection($books);
+
+        return $this->responseSuccess(200, "Fetched all successfully", $genre[0]);
     }
-    
 }
