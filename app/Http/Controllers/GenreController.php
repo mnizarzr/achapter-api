@@ -16,7 +16,7 @@ class GenreController extends Controller
     public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->middleware('isAdmin', ["except" => ["index"]]);
+        $this->middleware('isAdmin', ["except" => ["index", "getAllBooks"]]);
     }
 
     public function index()

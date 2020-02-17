@@ -8,6 +8,7 @@ use App\Models\BookDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Resources\BookDetailResource;
+
 class BookController extends Controller
 {
 
@@ -96,11 +97,11 @@ class BookController extends Controller
 
         // Book model fields
 
-        $book->ISBN = $request->isbn;
-        $book->title = $request->title;
-        $book->publishing_date = $request->publishing_date;
-        $book->publisher_id = $request->publisher_id;
-        $book->updated_by = Auth::user()["id"];
+        $book->ISBN = $request->isbn ?: $book->ISBN;
+        $book->title = $request->title ?: $book->title;
+        $book->publishing_date = $request->publishing_date ?: $book->publishing_date;
+        $book->publisher_id = $request->publisher_id ?: $book->publisher_id;
+        $book->updated_by = Auth::user()["id"] ?: $book->updated_by;
 
         // Book detail fields
 

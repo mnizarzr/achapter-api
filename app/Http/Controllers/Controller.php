@@ -34,7 +34,6 @@ class Controller extends BaseController
         $name = $request->title ?: $request->name;
         $pictureName = str_replace(" ", "", $name) . "_" . Date::now()->toDateString() . "." . $request->file('picture')->getClientOriginalExtension();
         $request->file('picture')->move(base_path('public' . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . $path), $pictureName);
-        return $pictureName;
+        return "/" . $pictureName;
     }
-
 }

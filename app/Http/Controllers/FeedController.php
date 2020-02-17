@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use App\Models\BookDetail;
+use App\Resources\BookResource;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 
 class FeedController extends Controller
@@ -28,6 +27,11 @@ class FeedController extends Controller
                     "feed_name" => "promo",
                     "title" => "Promo",
                     "data" => $data[1]
+                ],
+                [
+                    "feed_name" => "best_seller",
+                    "title" => "Best Seller",
+                    "data" => $data[2]
                 ]
             ]
         ], 200);
@@ -40,8 +44,9 @@ class FeedController extends Controller
         $promo = Book::with('bookDetail')->whereHas('bookDetail', function (Builder $query) {
             $query->where('discount', '>', 0);
         })->get();
+        $bestSeller = Book::orderBy('bought_count', 'desc')->get();
 
-        return $this->feedResponse([$newRelease, $promo]);
+        return $this->feedResponse([BookResource::collection($newRelease), BookResource::collection($promo), BookResource::collection($bestSeller)]);
     }
 
     public function getFeed($feedName)
@@ -51,10 +56,12 @@ class FeedController extends Controller
 
         switch ($feedName) {
             case "new_release":
-                $response = Book::whereMonth('publishing_date', Date::now()->month)->get();
+                $book = Book::whereMonth('publishing_date', Date::now()->month)->get();
+                $response = BookResource::collection($book);
                 break;
             case "best_seller":
-                $response = Book::with('bookDetail')->orderBy('bought_count', 'desc')->get();
+                $book = Book::orderBy('bought_count', 'desc')->get();
+                $response = BookResource::collection($book);
                 break;
         }
 
